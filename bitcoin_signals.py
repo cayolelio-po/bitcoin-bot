@@ -115,14 +115,10 @@ def check_signals(interval):
 send_telegram("🤖 <b>Bot de señales BTC iniciado</b>\nMonitoreando RSI 14 + MACD en 5m y 1h (señales independientes)")
 print("Bot de señales Bitcoin iniciado.")
 
-check_5m_counter = 0
 while True:
     try:
         check_signals("5m")
-        check_5m_counter += 1
-        if check_5m_counter >= 12:
-            check_signals("1h")
-            check_5m_counter = 0
+        check_signals("1h")
         time.sleep(300)
     except KeyboardInterrupt:
         print("Bot detenido.")
