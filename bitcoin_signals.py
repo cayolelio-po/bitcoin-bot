@@ -6,7 +6,10 @@ BOT_TOKEN = "8715230504:AAHncD3m3nhCAG-UxAuGS7btY1snweC5zvw"
 CHAT_ID = "1058404514"
 SYMBOL = "BTCUSDT"
 
-last_signal = {"5m": None, "1h": None}
+last_signal = {
+    "5m":  {"rsi": None, "macd": None},
+    "1h":  {"rsi": None, "macd": None}
+}
 
 def send_telegram(msg):
     requests.post(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage", json={
@@ -56,32 +59,60 @@ def check_signals(interval):
     macd_now, macd_prev, sig_now, sig_prev = calc_macd(closes)
     price = closes[-1]
 
+    # --- Señal RSI ---
+    if rsi < 30 and last_signal[interval]["rsi"] != "SOBREVENTA":
+        last_signal[interval]["rsi"] = "SOBREVENTA"
+        send_telegram(
+            f"📊 <b>RSI SOBREVENTA - BTC/USDT</b>\n"
+            f"⏱ Temporalidad: <b>{interval}</b>\n"
+            f"💰 Precio: <b>${price:,.2f}</b>\n"
+            f"📉 RSI 14: <b>{rsi:.1f}</b> (por debajo de 30)\n"
+            f"🕐 {datetime.now().strftime('%H:%M:%S')}"
+        )
+        print(f"[{interval}] RSI sobreventa enviado — RSI: {rsi:.1f}")
+    elif rsi > 70 and last_signal[interval]["rsi"] != "SOBRECOMPRA":
+        last_signal[interval]["rsi"] = "SOBRECOMPRA"
+        send_telegram(
+            f"📊 <b>RSI SOBRECOMPRA - BTC/USDT</b>\n"
+            f"⏱ Temporalidad: <b>{interval}</b>\n"
+            f"💰 Precio: <b>${price:,.2f}</b>\n"
+            f"📈 RSI 14: <b>{rsi:.1f}</b> (por encima de 70)\n"
+            f"🕐 {datetime.now().strftime('%H:%M:%S')}"
+        )
+        print(f"[{interval}] RSI sobrecompra enviado — RSI: {rsi:.1f}")
+    elif 30 <= rsi <= 70:
+        last_signal[interval]["rsi"] = None
+
+    # --- Señal MACD ---
     macd_cross_up = macd_prev < sig_prev and macd_now > sig_now
     macd_cross_down = macd_prev > sig_prev and macd_now < sig_now
 
-    signal = None
-    if rsi < 30 and macd_cross_up:
-        signal = "COMPRA"
-    elif rsi > 70 and macd_cross_down:
-        signal = "VENTA"
-
-    if signal and signal != last_signal[interval]:
-        last_signal[interval] = signal
-        emoji = "🟢" if signal == "COMPRA" else "🔴"
-        msg = (
-            f"{emoji} <b>SEÑAL DE {signal} - BTC/USDT</b>\n"
+    if macd_cross_up and last_signal[interval]["macd"] != "CRUCE_ARRIBA":
+        last_signal[interval]["macd"] = "CRUCE_ARRIBA"
+        send_telegram(
+            f"📈 <b>MACD CRUCE ALCISTA - BTC/USDT</b>\n"
             f"⏱ Temporalidad: <b>{interval}</b>\n"
             f"💰 Precio: <b>${price:,.2f}</b>\n"
             f"📊 RSI 14: <b>{rsi:.1f}</b>\n"
-            f"📈 MACD: <b>{macd_now:.2f}</b> | Señal: <b>{sig_now:.2f}</b>\n"
+            f"⚡ MACD: <b>{macd_now:.2f}</b> cruza sobre señal: <b>{sig_now:.2f}</b>\n"
             f"🕐 {datetime.now().strftime('%H:%M:%S')}"
         )
-        send_telegram(msg)
-        print(f"[{interval}] Señal {signal} enviada — RSI: {rsi:.1f}")
-    else:
-        print(f"[{interval}] RSI: {rsi:.1f} | MACD: {macd_now:.2f} | Sin señal")
+        print(f"[{interval}] MACD cruce alcista enviado")
+    elif macd_cross_down and last_signal[interval]["macd"] != "CRUCE_ABAJO":
+        last_signal[interval]["macd"] = "CRUCE_ABAJO"
+        send_telegram(
+            f"📉 <b>MACD CRUCE BAJISTA - BTC/USDT</b>\n"
+            f"⏱ Temporalidad: <b>{interval}</b>\n"
+            f"💰 Precio: <b>${price:,.2f}</b>\n"
+            f"📊 RSI 14: <b>{rsi:.1f}</b>\n"
+            f"⚡ MACD: <b>{macd_now:.2f}</b> cruza bajo señal: <b>{sig_now:.2f}</b>\n"
+            f"🕐 {datetime.now().strftime('%H:%M:%S')}"
+        )
+        print(f"[{interval}] MACD cruce bajista enviado")
 
-send_telegram("🤖 <b>Bot de señales BTC iniciado</b>\nMonitoreando RSI 14 + MACD en 5m y 1h")
+    print(f"[{interval}] RSI: {rsi:.1f} | MACD: {macd_now:.2f} | Señal MACD: {sig_now:.2f}")
+
+send_telegram("🤖 <b>Bot de señales BTC iniciado</b>\nMonitoreando RSI 14 + MACD en 5m y 1h (señales independientes)")
 print("Bot de señales Bitcoin iniciado.")
 
 check_5m_counter = 0
