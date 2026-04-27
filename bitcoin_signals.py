@@ -16,11 +16,10 @@ def send_telegram(msg):
     })
 
 def get_klines(interval, limit=100):
-    bybit_interval = "5" if interval == "5m" else "60"
-    url = f"https://api.bybit.com/v5/market/kline?category=spot&symbol={SYMBOL}&interval={bybit_interval}&limit={limit}"
+    granularity = 300 if interval == "5m" else 3600
+    url = f"https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity={granularity}"
     data = requests.get(url, timeout=10).json()
-    candles = data["result"]["list"]
-    closes = [float(c[4]) for c in reversed(candles)]
+    closes = [float(c[4]) for c in reversed(data[:limit])]
     return closes
 
 def calc_rsi(closes, period=14):
