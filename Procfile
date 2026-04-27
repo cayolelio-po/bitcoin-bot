@@ -1,1 +1,1 @@
- worker: python bitcoin_signals.py
+worker: python bitcoin_signals.py
