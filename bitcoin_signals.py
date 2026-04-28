@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 BOT_TOKEN = "8715230504:AAHncD3m3nhCAG-UxAuGS7btY1snweC5zvw"
-CHAT_ID = "1058404514"
+CHAT_IDS = ["1058404514", "679685918", "8793813161"]
 SYMBOL = "BTCUSDT"
 
 last_signal = {
@@ -12,17 +12,18 @@ last_signal = {
 }
 
 def send_telegram(msg):
-    try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
-            json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "HTML"},
-            timeout=10
-        )
-        data = r.json()
-        if not data.get("ok"):
-            print(f"[Telegram ERROR] {data}")
-    except Exception as e:
-        print(f"[Telegram EXCEPCION] {e}")
+    for chat_id in CHAT_IDS:
+        try:
+            r = requests.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                json={"chat_id": chat_id, "text": msg, "parse_mode": "HTML"},
+                timeout=10
+            )
+            data = r.json()
+            if not data.get("ok"):
+                print(f"[Telegram ERROR {chat_id}] {data}")
+        except Exception as e:
+            print(f"[Telegram EXCEPCION {chat_id}] {e}")
 
 def get_klines(interval, limit=100):
     granularity = 300 if interval == "5m" else 3600
