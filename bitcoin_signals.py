@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 BOT_TOKEN = "8715230504:AAHncD3m3nhCAG-UxAuGS7btY1snweC5zvw"
-CHAT_ID = "1058404514"
+CHAT_ID = "-5139521021"
 SYMBOL = "BTCUSDT"
 
 last_signal = {
